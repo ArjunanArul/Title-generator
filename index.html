@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Podcast Title Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: url('https://images.pexels.com/photos/110854/pexels-photo-110854.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2') no-repeat center center fixed;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;
+        }
+        .title-font {
+            font-family: 'Audiowide', cursive;
+        }
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Add a subtle overlay to improve text readability */
+        .backdrop-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        main, header {
+            position: relative;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body class="text-white flex items-center justify-center min-h-screen p-4 backdrop-overlay">
+
+    <div class="w-full max-w-3xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="title-font text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 pb-2">
+                Title Hacker
+            </h1>
+            <p class="text-gray-200 mt-2 text-xl">Only for you babe</p>
+        </header>
+
+        <main>
+            <div class="bg-gray-800/80 backdrop-blur-sm p-6 rounded-2xl shadow-2xl border border-gray-700">
+                <div class="flex flex-col gap-4">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="podcastName" class="text-gray-300 font-medium">Podcast Name</label>
+                            <input type="text" id="podcastName" class="mt-2 w-full bg-gray-700/80 text-white placeholder-gray-400 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-300 border border-gray-600">
+                        </div>
+                         <div>
+                            <label for="podcastNumber" class="text-gray-300 font-medium">Podcast Number</label>
+                            <input type="number" id="podcastNumber" class="mt-2 w-full bg-gray-700/80 text-white placeholder-gray-400 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-300 border border-gray-600">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="podcastDetails" class="text-gray-300 font-medium">Your Podcast Details</label>
+                        <textarea id="podcastDetails" rows="8" class="mt-2 w-full bg-gray-700/80 text-white placeholder-gray-400 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-300 border border-gray-600" placeholder="Enter your podcast details here. Include topics, timestamps, guest names, key takeaways, etc."></textarea>
+                    </div>
+
+                    <button id="generateBtn" class="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition duration-300 ease-in-out self-end">
+                        Generate Titles
+                    </button>
+                </div>
+            </div>
+
+            <div id="loading" class="text-center my-8 hidden">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto"></div>
+                <p class="mt-4 text-gray-400">Brewing up some amazing titles...</p>
+            </div>
+
+            <div id="messageBox" class="hidden my-4 p-4 text-center rounded-lg"></div>
+
+            <div id="results" class="mt-8">
+                <!-- Generated titles will be inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const podcastNameInput = document.getElementById('podcastName');
+        const podcastNumberInput = document.getElementById('podcastNumber');
+        const podcastDetailsInput = document.getElementById('podcastDetails');
+        const generateBtn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+        const resultsContainer = document.getElementById('results');
+        const messageBox = document.getElementById('messageBox');
+
+        generateBtn.addEventListener('click', generateTitles);
+
+        async function generateTitles() {
+            const podcastName = podcastNameInput.value.trim();
+            const podcastNumber = podcastNumberInput.value.trim();
+            const details = podcastDetailsInput.value.trim();
+
+            if (!details || !podcastName || !podcastNumber) {
+                showMessage('Please fill in all mandatory fields: Podcast Name, Number, and Details.', 'error');
+                return;
+            }
+
+            loading.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+            messageBox.classList.add('hidden');
+            generateBtn.disabled = true;
+            generateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                // Construct a more detailed and structured prompt
+                let prompt = `Generate a list of 5 YouTube podcast titles based on the provided details. Each title MUST be highly enthusiastic, generate curiosity, and be framed as an intriguing question or a powerful statement. The titles must be under 100 characters.
+
+The format must strictly follow this order:
+1. A curiosity-driven question or an enthusiastic statement that sounds like the guest is revealing a secret or telling a story (e.g., "How I Built...", "The #1 Mistake I Made...", "What If You Could...?").
+2. Integrate the guest's name and their company name naturally into the phrase. Do NOT use "feat." and do NOT put the company name in brackets. The guest should sound like they are the one speaking or being discussed.
+3. The podcast name, enclosed in pipes (e.g., "| The Future Forward |").
+4. The episode number, formatted as a hashtag with "ep" and no space (e.g., "#ep42").
+
+Here are the details to use:
+- Podcast Name: "${podcastName}"
+- Episode Number: "${podcastNumber}"
+- Content Details: "${details}"
+
+Example of a perfect output title: "How Satya Nadella Reinvented Microsoft's Entire Strategy | The Future Forward | #ep42"
+Another example: "What's The One Secret Elon Musk Used to Build SpaceX? | The Future Forward | #ep21"
+
+Generate 5 title variations based on the provided content details.`;
+                
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "titles": {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            "title": { type: "STRING" }
+                                        },
+                                        required: ["title"]
+                                    }
+                                }
+                            },
+                            required: ["titles"]
+                        }
+                    }
+                };
+                
+                const apiKey = ""; // API key is handled by the environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    const parsedJson = JSON.parse(jsonText);
+                    displayTitles(parsedJson.titles);
+
+                } else {
+                    console.error('Unexpected API response structure:', result);
+                    showMessage('Could not generate titles due to an unexpected response from the AI. Please try again.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error generating titles:', error);
+                showMessage('An error occurred while generating titles. Please check the console and try again.', 'error');
+            } finally {
+                loading.classList.add('hidden');
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function displayTitles(titles) {
+            if (!titles || titles.length === 0) {
+                showMessage('The AI could not generate any titles for this topic. Try being more specific!', 'info');
+                return;
+            }
+
+            resultsContainer.innerHTML = titles.map((item, index) => `
+                <div class="bg-gray-800/80 backdrop-blur-sm border border-gray-700 p-4 rounded-lg mb-4 flex justify-between items-center animate-fade-in" style="animation-delay: ${index * 100}ms;">
+                    <p class="text-lg text-gray-200">${item.title}</p>
+                    <button class="copy-btn bg-gray-700 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300" data-title="${item.title}">
+                        Copy
+                    </button>
+                </div>
+            `).join('');
+            
+            // Add event listeners to the new copy buttons
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    copyToClipboard(button);
+                });
+            });
+        }
+
+        function copyToClipboard(button) {
+            const titleToCopy = button.dataset.title;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = titleToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            try {
+                 document.execCommand('copy');
+                 // Visually indicate success
+                 button.textContent = 'Copied!';
+                 button.classList.add('bg-green-600');
+                 setTimeout(() => {
+                     button.textContent = 'Copy';
+                     button.classList.remove('bg-green-600');
+                 }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                showMessage('Failed to copy title to clipboard.', 'error');
+            }
+            document.body.removeChild(tempTextArea);
+        }
+
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-500', 'bg-blue-500', 'bg-green-500');
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-500');
+            } else if (type === 'success') {
+                 messageBox.classList.add('bg-green-500');
+            } else {
+                messageBox.classList.add('bg-blue-500');
+            }
+        }
+        
+        // Add a simple fade-in animation for the results
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fade-in {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in {
+                animation: fade-in 0.5s ease-out forwards;
+            }
+        `;
+        document.head.appendChild(style);
+
+    </script>
+</body>
+</html>
